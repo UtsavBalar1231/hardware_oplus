@@ -28,6 +28,9 @@
  */
 
 #include "effect.h"
+#ifdef ENABLE_DYNAMIC_EFFECTS
+#include "DynamicEffectLoader.h"
+#endif
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(*(a)))
 
@@ -35,8 +38,24 @@
 
 const struct effect_stream *get_effect_stream(uint32_t effect_id)
 {
-    int i;
+#ifdef ENABLE_DYNAMIC_EFFECTS
+    // Try dynamic effects first if enabled
+    static bool loader_initialized = false;
+    if (!loader_initialized) {
+        auto& loader = aidl::android::hardware::vibrator::DynamicEffectLoader::getInstance();
+        loader.initialize();
+        loader_initialized = true;
+    }
+    
+    auto& loader = aidl::android::hardware::vibrator::DynamicEffectLoader::getInstance();
+    const struct effect_stream* stream = loader.getEffectStream(effect_id);
+    if (stream != nullptr) {
+        return stream;
+    }
+#endif
 
+    // Fall back to static effects
+    int i;
     for (i = 0; i < ARRAY_SIZE(effects); i++) {
         if (effect_id == effects[i].effect_id)
             return &effects[i];
