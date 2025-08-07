@@ -556,7 +556,9 @@ ndk::ScopedAStatus Vibrator::perform(Effect effect, EffectStrength es, const std
             ALOGD("Starting perform on another thread");
             usleep(playLengthMs * 1000);
             ALOGD("Notifying perform complete");
-            callback->onComplete();
+            if (callback != nullptr && !callback->onComplete().isOk()) {
+                ALOGE("Failed to call onComplete for perform");
+            }
         }).detach();
     }
 

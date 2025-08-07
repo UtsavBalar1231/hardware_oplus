@@ -64,7 +64,9 @@ ndk::ScopedAStatus Vibrator::on(int32_t timeoutMs,
     if (callback != nullptr) {
         std::thread([=] {
             usleep(ret * 1000);
-            callback->onComplete();
+            if (callback != nullptr && !callback->onComplete().isOk()) {
+                ALOGE("Failed to call onComplete for vibrator on");
+            }
         }).detach();
     }
 
@@ -102,7 +104,9 @@ ndk::ScopedAStatus Vibrator::perform(Effect effect, EffectStrength es,
     if (callback != nullptr) {
         std::thread([=] {
             usleep(ret * 1000);
-            callback->onComplete();
+            if (callback != nullptr && !callback->onComplete().isOk()) {
+                ALOGE("Failed to call onComplete for perform");
+            }
         }).detach();
     }
 
